@@ -41,3 +41,14 @@
 - Support for setting dates to directories.
 - Support for copying dates to directories.
 - Bug fixes.
+
+## ... andrzejQ 2023-03-23 .. 29
+1. FromFileName - more examples
+2. doctest
+3. .get_st() -> dict:
+  Returns a dictionary containing original `timestamp` (Unix or Windows) 
+  - float (not int) in Linux, quadword in Windows
+  {'created': <timestamp>,... 'modified': <timestamp>, 'accessed': <timestamp>}
+  
+If after saving a new LastWriteTime, the LastAccessTime is set to the current time, there is probably a process in the background that reads the contents of the file, for example TortoiseGit for a file under git control. In this case doctest will show errors.  (To stop TGitCache.exe open TortoiseGit Settings > Icon Overlays \ "None" \ [OK]).
+

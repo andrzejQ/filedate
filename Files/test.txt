@@ -1,0 +1,34 @@
+
+https://learn.microsoft.com/en-us/windows/win32/sysinfo/file-times
+...
+Not all file systems can record creation and last access times, and not all file systems record them in the same manner. 
+For example, the resolution of create time on FAT is 10 milliseconds, while write time has a resolution of 2 seconds and access time has a resolution of 1 day, so it is really the access date. 
+
+The NTFS file system delays updates to the last access time for a file by up to 1 hour after the last access.
+
+------------------------
+
+https://devblogs.microsoft.com/oldnewthing/20111010-00/?p=9433
+
+https://learn.microsoft.com/windows/win32/api/fileapi/nf-fileapi-setfiletime
+
+[in, optional] lpLastAccessTime
+
+To prevent file operations using the given handle from modifying the last access time, call SetFileTime immediately after opening the file handle and pass a FILETIME structure that has both the dwLowDateTime and dwHighDateTime members set to 0xFFFFFFFF.
+
+[in, optional] lpLastWriteTime
+
+To prevent file operations using the given handle from modifying the last write time, call SetFileTime immediately after opening the file handle and pass a FILETIME structure that has both the dwLowDateTime and dwHighDateTime members set to 0xFFFFFFFF.
+
+-----------------------
+Powershell
+
+$txt='test.txt'
+Get-ItemProperty $txt | Select-Object -Property *Time
+(Get-Item $txt).LastAccessTime='1999-01-02'
+(Get-Item($txt)).LastAccessTime
+Get-ItemProperty $txt | Select-Object -Property *Time
+(Get-Item $txt).CreationTime='1997-11-22'
+Get-ItemProperty $txt | Select-Object -Property *Time
+(Get-Item $txt).LastWriteTime='1998-01-02'
+Get-ItemProperty $txt | Select-Object -Property *Time 
