@@ -12,4 +12,4 @@ __date__ = "21.07.2022"
 
 #-=-=-=-#
 
-# modified: https://github.com/andrzejQ ; 2023-03-23
+# modified: 2023-03-23, https://github.com/andrzejQ/filedate

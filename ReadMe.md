@@ -1,19 +1,20 @@
 <p align=center><img src=https://raw.githubusercontent.com/kubinka0505/filedate/master/Documents/Pictures/filedate.svg width=50%></p>
 
 <p align=center>
-<!--a href=http://github.com/kubinka0505/filedate/releases>
-<img src=https://img.shields.io/github/v/release/kubinka0505/filedate?style=for-the-badge></a-->
-<a href=http://github.com/kubinka0505/filedate/commit>
+<a href=http://github.com/andrzejQ/filedate/releases>
+<img src=https://img.shields.io/github/v/release/andrzejQ/filedate?style=for-the-badge></a>
+<a href=http://github.com/andrzejQ/filedate/commit>
 <img src=https://img.shields.io/github/last-commit/andrzejQ/filedate?style=for-the-badge></a>
-<a href=http://github.com/kubinka0505/filedate/blob/master/License.txt>
-<img src=https://img.shields.io/github/license/kubinka0505/filedate?logo=readthedocs&color=red&logoColor=white&style=for-the-badge></a>
+<a href=http://github.com/andrzejQ/filedate/blob/master/License.txt>
+<img src=https://img.shields.io/github/license/andrzejQ/filedate?logo=readthedocs&color=red&logoColor=white&style=for-the-badge></a>
 </p>
-<!--p align=center>
-<img src=https://img.shields.io/tokei/lines/github/kubinka0505/filedate?style=for-the-badge>　
-<img src=https://img.shields.io/github/languages/code-size/kubinka0505/filedate?style=for-the-badge>
-<img src=https://img.shields.io/codeclimate/maintainability/kubinka0505/filedate?logo=code-climate&style=for-the-badge>
+<p align=center>
+<img src=https://img.shields.io/tokei/lines/github/andrzejQ/filedate?style=for-the-badge>　
+<img src=https://img.shields.io/github/languages/code-size/andrzejQ/filedate?style=for-the-badge>
+<img src=https://img.shields.io/codeclimate/maintainability/andrzejQ/filedate?logo=code-climate&style=for-the-badge>
 <img src=https://img.shields.io/codacy/grade/c8aeb5f42a38414da83d4156b546a4d1?logo=codacy&style=for-the-badge>
-</p-->
+</p>
+
 
 ## Description 📝
 
@@ -21,10 +22,18 @@ Simple, convenient and cross-platform file date changing library. 📅
 
 Forked from [kubinka0505/filedate](https://github.com/kubinka0505/filedate)
 
+See also  [jelmerwouters / filedate](https://github.com/jelmerwouters/filedate) -> FileDate.set() (not tested here, commented)
+
 ## Installation 🖥️
 
 * [`git`](https://github.com/andrzejQ/filedate.git) or get source files
 
+```bash
+git clone git://github.com/andrzejQ/filedate
+cd filedate
+python setup.py install
+```
+Source can be also used without installation.
  
 ## Usage 📝
 

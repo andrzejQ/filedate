@@ -9,13 +9,13 @@ chdir(path.abspath(path.dirname(__file__)))
 setup(
 	name = "filedate",
 	description = open("ReadMe.rst").readline().rstrip(),
-	version = "2.0",
-	author = "kubinka0505",
+	version = "2.2",
+	author = "kubinka0505; forked by Benjamin Design; forked by andrzejQ",
 	license = "GPLv3",
 	keywords = "filedate file date change changing changer",
-	url = "https://github.com/kubinka0505/filedate",
+	url = "https://github.com/andrzejQ/filedate",
 	classifiers = [
-		"Development Status :: 6 - Mature",
+		"Development Status :: 4 - Beta",
 		"License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
 		"Programming Language :: Python :: 3 :: Only",
 		"Operating System :: OS Independent",
