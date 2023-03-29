@@ -159,7 +159,7 @@ class FileDate:
 
       _ = self.get_st() # get self.dict_tstamps
       
-      if created is not None: # not used for Unix file, but parsed here, for test purpose
+      if created is not None: # not used for Unix file
         self.dict_tstamps["created"] = FileDate._modify(created)
       if modified is not None:
         self.dict_tstamps["modified"] = FileDate._modify(modified)
@@ -168,9 +168,17 @@ class FileDate:
       [c_tstamp, m_tstamp, a_tstamp] = [ self.dict_tstamps[k] for k in ("created", "modified", "accessed")]
 
       #---#
+      
+      # if created is not None: 
+      # https://github.com/jelmerwouters/filedate
+      #   if os.sys.platform == 'darwin':  # Macos   # not tested ...
+      #     command = 'SetFile -d "%s" "%s"' % (datetime.fromtimestamp(c_tstamp).strftime('%m/%d/%Y %H:%M:%S'), self.file)
+      #     call(command, shell=True)
+
       # Setting Accessed & Modified Time
       # ?? os.chmod(self.file_name, 511)
       os.utime(self.file_name, (a_tstamp, m_tstamp))
+      
 
     else: # Windows # https://devblogs.microsoft.com/oldnewthing/20111010-00/?p=9433
                     # https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-setfiletime

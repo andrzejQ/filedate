@@ -42,8 +42,13 @@
 - Support for copying dates to directories.
 - Bug fixes.
 
-## ... andrzejQ 2023-03-23 .. 29
-1. FromFileName - more examples
+## 2.1
+See  [jelmerwouters / filedate] (https://github.com/jelmerwouters/filedate) -> FileDate.set()  
+(not tested here, commented)
+
+## 2.2  
+[andrzejQ / filedate](https://github.com/andrzejQ/filedate) 2023-03-23 .. 29
+1. FromFileName - more cases
 2. doctest
 3. .get_st() -> dict:
   Returns a dictionary containing original `timestamp` (Unix or Windows) 
