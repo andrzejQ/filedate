@@ -84,7 +84,8 @@ class FileDate:
     if self.dict_tstamps:
       return self.dict_tstamps # >>>>>>>>>>>>>
     
-    dict = {}
+    dict = None
+    
     if not FileDate.windows:
       info = os.stat(self.file_name)
       dict = {

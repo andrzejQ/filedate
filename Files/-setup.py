@@ -24,7 +24,7 @@ setup(
 		"Topic :: Desktop Environment :: File Managers",
 		"Natural Language :: English"
 	],
-	python_requires = ">=3.4",
+	python_requires = ">=3.8",
 	install_requires = "python-dateutil",
 	packages = find_packages()
 )
