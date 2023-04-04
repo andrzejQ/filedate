@@ -8,6 +8,7 @@ from filedate import FileDate
 
 # Set date of folder (recursive) based on dates of files below it
 # iterative from child directories first.
+# Option `-e`: remove empty folders recursively
 # https://stackoverflow.com/questions/23488924/how-to-delete-recursively-empty-folders-in-python3
 
 
@@ -63,7 +64,9 @@ def remove_empty_dirs(dir0):
 
 ###
 
-# remove_empty_dirs('.')
+
+if len(sys.argv) > 1 and sys.argv[1] == '-e':
+  remove_empty_dirs('.')
 
 set_date_of_folders('.')
 
