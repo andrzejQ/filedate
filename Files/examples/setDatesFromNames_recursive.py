@@ -8,7 +8,7 @@ from filedate.utils import FromFileName
 # Get all files in subdirectories (recursive)
 # and set their dates based on file name.
 for file in Path(".").glob("**/*"):
-  print(file, '>>>')
-  print(FromFileName(file).set_date('cma'))
+	print(file, '>>>')
+	print(FromFileName(file).set_date('cma'))
 
 print('.')
