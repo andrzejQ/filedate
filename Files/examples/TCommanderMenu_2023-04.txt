@@ -1,0 +1,25 @@
+﻿TotalCommander - Start - user menu
+
+Assumption: 
+The %FileDate% environment variable points to the path to "...filedata\Files"
+
+Number in "menu...=" MUST continue numbering in "wincmd.ini" section [user]
+
+menu51=-__FileDate__
+menu52=For selection - synchronization of dates as in the 2nd panel
+cmd52=cmd
+param52=/k for %%G in (%S) do py "%%FileDate%%\examples\copyFileDate.py" "%T%%~G" "%%G"
+menu53=Date synchronization *.* (recurs.) as in the 2nd panel
+cmd53=cmd
+param53=/k py "%%FileDate%%\examples\copyAllDatesFromDir_recursive.py" "%T:~0,-1" "%P:~0,-1"
+menu54=For selection - dates from names
+cmd54=cmd
+param54=/k for %%G in (%S) do py "%%FileDate%%\examples\setDateFromName.py" "%%G"
+menu55=Dates from names - *.* (recurs.)
+cmd55=cmd
+param55=/k py "%%FileDate%%\examples\setDatesFromNames_recursive.py" "%P:~0,-1"
+menu56=robocopy (rekurs.) - copy OLDER dates from the 2nd panel
+cmd56=cmd
+param56=/k robocopy /e /xn /timfix /copy:t /dcopy:t "%T." "%P."
+menu57=--
+

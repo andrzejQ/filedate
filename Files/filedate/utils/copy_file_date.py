@@ -15,25 +15,33 @@ class CopyFileDate:
 	{'created': '...', 'modified': '2001-03-04 00:00:00', 'accessed': '2001-05-06 00:00:00'}
 	>>> print(CopyFileDate("../../test.txt", "rec_20210911 134705.abc.txt").set_date('cma')) ## Unix - created is not set # doctest: +ELLIPSIS
 	{'created': '...', 'modified': '2001-03-04 00:00:00', 'accessed': '2001-05-06 00:00:00'}
+	>>> print(CopyFileDate("nothing.x", "rec_20210911 134705.abc.txt").set_date('cma'))
+	???: nothing.x
+	Input file timestamp error
+	>>> print(CopyFileDate("../../test.txt", "nothing.y").set_date('cma')) # doctest: +ELLIPSIS
+	???: ...nothing.y
+	???
 	"""
 	def __init__(self, inpt: str, output: str):
-		f =  FileDate(inpt)
-
-		self.inp_timestamp = f.get_st()
-		self.output = output
-		#$# print(self.output) #$#
+		self.inpt = inpt
+		self.output = output #$# ;print(self.output) #$#
 
 	def set_date(self, cma='cma'):
 		"""
 		Sets the date based on `inpt` file date
 		for [c]reated, [m]odified, [a]ccessed date
 		"""
+		f =  FileDate(self.inpt)
+		inp_timestamp = f.get_st()
+		if inp_timestamp is None:
+			print(f'???: {self.inpt}')
+			return 'Input file timestamp error'
 		dt_tm_param = {'created': None, 'modified': None, 'accessed': None}
 		for k in dt_tm_param.keys():
 			if k[0] in cma:
 				# if k[0] == 'c' and not FileDate.windows:
 				#   warn('Unix system - setting creation date is obsolete')
-				dt_tm_param[k] = self.inp_timestamp[k]
+				dt_tm_param[k] = inp_timestamp[k]
 
 		return FileDate(self.output).set(**dt_tm_param) # return FileDate.self if not FileDate.SET_SILENT
 

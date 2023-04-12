@@ -114,14 +114,23 @@ class FileDate:
 		when file was {'created': datetime.datetime(2023,... 'modified': ... 'accessed': ...}
 		"""
 		di = self.get_st()
-		for key, value in di.items():
-			di[key] = FileDate._UxW_datetime(value)
+		if di is None:
+			print(f'???: {self.file_name}')
+		else:
+			for key, value in di.items():
+				di[key] = FileDate._UxW_datetime(value)
 		return di
 
 	def __str__(self) -> str:
+		"""
+		>>> print(FileDate('nothing.x')) # doctest: +ELLIPSIS
+		???: ...nothing.x
+		???
+		"""
 		di = self.get()
 		# NOT: di = FileDate(self.file_name).get() #
-		return f'''{ {k: v.isoformat(' ', FileDate.TIMESPEC) for (k, v) in di.items()} }'''
+		return f'''{ {k: v.isoformat(' ', FileDate.TIMESPEC) for (k, v) in di.items()} }'''\
+			if di is not None else '???'
 
 	def __repr__(self):
 		return str(self)

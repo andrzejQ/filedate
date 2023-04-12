@@ -75,6 +75,9 @@ CopyFileDate("../__init__.py", "rec_20210911 134705.abc.txt").set_date('cma')
 ```
 
 ### **Keeping files dates** ⌛
+
+1.
+
 ```python
 from pathlib import Path
 from filedate.utils import KeepFileDate
@@ -102,6 +105,9 @@ Dates.pick()
 Dates.drop()
 ```
 
+2. Once we have the backup, we can restore files/folders dates using  
+"copyAllDatesFromDir_recursive.py" (see examples, see also "TCommanderMenu_2023-04.txt")
+
 ### **Set file dates based on its name** 📝
 
 * for [c]reated, [m]odified, [a]ccessed date
@@ -115,6 +121,9 @@ see also examples in `_yyyy_()` and `_dd_MM_yyyy_()`
 ### Working examples
 
 * Files\examples\ **setDatesFromNames_recursive.py**  
-  -> Set date of folder (recursive) based on dates of files below it iterative from child directories first.
+  -> Get all files/folders in subdirectories (recursive) and set their dates based on file name.
 * Files\examples\ **setFolderDates_recursive.py**  
-  -> Get all files in subdirectories (recursive) and set their dates based on file name.
+  -> Set date of folder (recursive) based on dates of files/folders below it - iterative from child directories first.
+* **copyAllDatesFromDir_recursive.py**
+* **setDateFromName.py**
+* **copyFileDate.py**

@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
 import os
-# from datetime import datetime
-
-import sys; sys.path.insert(1, sys.path[0]+'/..') # if `filedate` not installed
+import sys
+sys.path.insert(1, sys.path[0]+'/..') # if `filedate` not installed
 from filedate import FileDate
 
 # Set date of folder (recursive) based on dates of files below it
@@ -64,8 +63,9 @@ def remove_empty_dirs(dir0):
 
 ###
 
+root0 = (sys.argv + ['.'])[1]
 
-if len(sys.argv) > 1 and sys.argv[1] == '-e':
-	remove_empty_dirs('.')
+if '-e' in sys.argv[1:]:
+	remove_empty_dirs(root0)
 
-set_date_of_folders('.')
+set_date_of_folders(root0)
