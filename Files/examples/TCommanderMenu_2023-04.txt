@@ -1,7 +1,7 @@
 ﻿TotalCommander - Start - user menu
 
 Assumption: 
-The %FileDate% environment variable points to the path to "...filedata\Files"
+The %FileDate% environment variable points to the path to "...filedate\Files"
 
 Number in "menu...=" MUST continue numbering in "wincmd.ini" section [user]
 
@@ -15,11 +15,16 @@ param53=/k py "%%FileDate%%\examples\copyAllDatesFromDir_recursive.py" "%T:~0,-1
 menu54=For selection - dates from names
 cmd54=cmd
 param54=/k for %%G in (%S) do py "%%FileDate%%\examples\setDateFromName.py" "%%G"
-menu55=Dates from names - *.* (recurs.)
+menu55=Dates from names *.* (recurs.)
 cmd55=cmd
 param55=/k py "%%FileDate%%\examples\setDatesFromNames_recursive.py" "%P:~0,-1"
-menu56=robocopy (rekurs.) - copy OLDER dates from the 2nd panel
+menu56=Date of folders on dates below it *.* (recurs.)
 cmd56=cmd
-param56=/k robocopy /e /xn /timfix /copy:t /dcopy:t "%T." "%P."
-menu57=--
-
+param56=/k py "%%FileDate%%\examples\setFolderDates_recursive.py" "%P:~0,-1"
+menu57=Date of folders on dates below it *.* (recurs.); remove empty
+cmd57=cmd
+param57=/k py "%%FileDate%%\examples\setFolderDates_recursive.py" "%P:~0,-1" -e
+menu58=robocopy (rekurs.) - copy OLDER dates from the 2nd panel
+cmd58=cmd
+param58=/k robocopy /e /xn /timfix /copy:t /dcopy:t "%T." "%P."
+menu59=--

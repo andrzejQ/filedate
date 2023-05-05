@@ -15,7 +15,7 @@ def set_date_of_folders(dir0):
 	oldest_timestamp = 116444736000000000 if FileDate.windows else 0 # 1970-01-01
 
 	def set_date_of_folder(root, names):
-		print(f'#$# {root=} >>> {names}') #$#
+		#$# print(f'#$# {root=} >>> {names}') #$#
 		if not names: #empty folder
 			ctime = oldest_timestamp
 			mtime = oldest_timestamp
@@ -31,7 +31,7 @@ def set_date_of_folders(dir0):
 
 		dir_date = FileDate(root)
 		dir_date.set( created = ctime, modified = mtime, accessed = mtime )
-		print(f'''>&> {root} : {FileDate(root)}''')
+		print(f'''>&> {root}''') #$# : {FileDate(root)}''') #$#
 		return
 
 	print(f'Set date of {dir0!r} and below folders:')
