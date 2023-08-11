@@ -19,8 +19,8 @@ class FromFileName:
 #-=-=-=-#
 
 	def _yyyy_(inp: str) -> str:
-		"""_yyyy_(inp: str) -> str:
-		Get date and time from file name, ignoring substring before YYYY
+		"""_yyyy_(inp: str) -> str: # 'yyyyyMMdd hhmmss'
+		Get date and time from file name, ignoring substring before YYYY and all r'\D'
 		>>> print(FromFileName._yyyy_("~/Downloads/rec1_20200911_134705.abc.wav"))
 		20200911 134705
 		>>> print(FromFileName._yyyy_("~/Downloads/rec1_2020-09-11 13.47.05.abc.wav"))
@@ -41,8 +41,8 @@ class FromFileName:
 	#-=-#
 
 	def _dd_MM_yyyy_(inp: str) -> str:
-		"""dt_tm_dd_MM_yyyy_(inp: str) -> str:
-		Get date and time from file name, ignoring substring before dd_MM_yyyy
+		"""dt_tm_dd_MM_yyyy_(inp: str) -> str:  # 'yyyyyMMdd hhmmss'
+		Get date and time from file name, ignoring substring before dd_MM_yyyy and all r'\D'
 		>>> print(FromFileName._dd_MM_yyyy_("~/Downloads/rec1_11.09.2020 13.47.05.abc.wav"))
 		20200911 134705
 		"""
@@ -71,8 +71,14 @@ class FromFileName:
 		try:
 			self._date = FileDate._UxW_timestamp( parser.parse(dt_tm) )
 		except ValueError:
-			print(f'''"{dt_tm}" <- string does not contain a date''')
-			return None
+			try: # case ss >= '60'
+				self._date = FileDate._UxW_timestamp( parser.parse(dt_tm[:1+14-2]) )
+			except ValueError:
+				try: # case mm >= '60' or hh >='24'
+					self._date = FileDate._UxW_timestamp( parser.parse(dt_tm[:8]) )
+				except ValueError:
+					print(f'''"{dt_tm}" <- string does not contain a date''')
+					return None
 		except OSError:
 			print(f'''"{dt_tm}" <- string does not contain valid file date''')
 			return None
@@ -113,6 +119,10 @@ def more_tests():
 	<BLANKLINE>
 	>>> FromFileName("x_0311_y.txt").set_date('cma')
 	"03110101" <- string does not contain valid file date
+	>>> FromFileName("2023-08-11 aaa 158i 2023bbb.txt").set_date('cma')
+	"{'created': '2023-08-11 00:00:00', 'modified': '2023-08-11 00:00:00', 'accessed': '2023-08-11 00:00:00'}"
+	>>> FromFileName("2023-08-11 12 21 61.txt").set_date('cma')
+	"{'created': '2023-08-11 12:21:00', 'modified': '2023-08-11 12:21:00', 'accessed': '2023-08-11 12:21:00'}"
 	"""
 
 
