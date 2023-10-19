@@ -31,8 +31,10 @@ See also  [jelmerwouters / filedate](https://github.com/jelmerwouters/filedate) 
 ```bash
 git clone git://github.com/andrzejQ/filedate
 cd filedate
-python setup.py install
+python -m pip install -e ./Files
 ```
+`-e` installs the package in editable mode. Any changes you make to the code in local folder will immediately apply across the system.
+
 Source can be also used without installation.
  
 ## Usage 📝
