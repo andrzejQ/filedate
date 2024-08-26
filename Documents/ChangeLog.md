@@ -57,3 +57,9 @@ See  [jelmerwouters / filedate] (https://github.com/jelmerwouters/filedate) -> F
   
 If after saving a new LastWriteTime, the LastAccessTime is set to the current time, there is probably a process in the background that reads the contents of the file, for example TortoiseGit for a file under git control. In this case doctest will show errors.  (To stop TGitCache.exe open TortoiseGit Settings > Icon Overlays \ "None" \ [OK]).
 
+## 2.3  
+[andrzejQ / filedate](https://github.com/andrzejQ/filedate) 2024-08-26 ..
+1. Added class FromMetadata: set file date based on its metadata.
+2. Poorly tested, but can be useful, for example, for saved attachments from e-mail.
+
+

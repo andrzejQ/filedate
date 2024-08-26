@@ -5,14 +5,16 @@ del open
 chdir(path.abspath(path.dirname(__file__)))
 
 #-=-=-=-#
+# requires only for FromMetadata case:
+# "PyPDF2", "docx", "openpyxl", "pptx", "hachoir"
 
 setup(
 	name = "filedate",
 	description = open("ReadMe.rst").readline().rstrip(),
-	version = "2.2",
+	version = "2.3",
 	author = "kubinka0505; forked by Benjamin Design; forked by andrzejQ",
 	license = "GPLv3",
-	keywords = "filedate file date change changing changer",
+	keywords = "filedate file date change changing changer metadata",
 	url = "https://github.com/andrzejQ/filedate",
 	classifiers = [
 		"Development Status :: 4 - Beta",
@@ -25,6 +27,6 @@ setup(
 		"Natural Language :: English"
 	],
 	python_requires = ">=3.8",
-	install_requires = "python-dateutil",
+	install_requires = "python-dateutil",      "PyPDF2", "docx", "openpyxl", "pptx", "hachoir"
 	packages = find_packages()
 )
