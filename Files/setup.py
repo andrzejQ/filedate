@@ -5,8 +5,7 @@ del open
 chdir(path.abspath(path.dirname(__file__)))
 
 #-=-=-=-#
-# requires only for FromMetadata case:
-# "PyPDF2", "docx", "openpyxl", "pptx", "hachoir"
+# required only for FromMetadata case: PyPDF2, hachoir
 
 setup(
 	name = "filedate",
@@ -27,6 +26,6 @@ setup(
 		"Natural Language :: English"
 	],
 	python_requires = ">=3.8",
-	install_requires = "python-dateutil",      "PyPDF2", "docx", "openpyxl", "pptx", "hachoir"
+	install_requires = "python-dateutil", "PyPDF2", "hachoir"
 	packages = find_packages()
 )

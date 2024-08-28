@@ -4,22 +4,23 @@ import re
 #from pathlib import Path
 
 from datetime import datetime
+from zipfile import ZipFile
+from xml.dom.minidom import parseString # for .docx, .xlsx, .pptx
 from PyPDF2 import PdfReader
-from docx import Document
-from openpyxl import load_workbook
-from pptx import Presentation
-from hachoir.parser import createParser
+from hachoir.parser import createParser # pip install PyPDF2 hachoir
 from hachoir.core import config as HachoirConfig
 HachoirConfig.quiet = True
-from hachoir.metadata import extractMetadata # creation_date as datetime
-# also from EXIF (OffsetTime-EXIF v.2.31 - I don't know if it's taken into account)
-# Many formats, but is there creation/modif. date-time?
+from hachoir.metadata import extractMetadata # creation_date, last_modification as datetime
+# also from EXIF (OffsetTime - EXIF v.2.31 - I don't know if it's taken into account)
+# Many formats
 # MP3, WAV, OGG, MIDI, AIFF, AIFC, RA
 # GIF, JPEG, PCX, PNG, TGA, TIFF, WMF, XCF
-# EXE	 # WMV, AVI, MKV, MOV, RM
+# WMV, AVI, MKV, MOV, RM  
+# EXE, DOC, XLS, PPT
 
 import sys; sys.path.insert(1, sys.path[0]+'/..') # if `filedate` not installed
 from filedate import FileDate
+
 
 from dateutil.parser import parse #used if FromMetadata.VERBOSE
 
@@ -40,7 +41,6 @@ for example, for saved attachments from e-mail.
 #-=-=-=-#
 
 # MIT - based on https://github.com/JMousqueton/MetaLookup/ ver "0.3.1"
-# pip install PyPDF2 python-docx openpyxl python-pptx hachoir
 
 	def extract_metadata(self, add_modified_if_missing = True):
 		"""add_modified_if_missing - and if created exists
@@ -67,7 +67,7 @@ for example, for saved attachments from e-mail.
 							if v_.year < 1970: # eq. CreationDate: D:16010101000000Z
 								v_ = None
 						except:
-							v_d = re.sub(r'(^.*?(\d{8,}).*$)',r'\2',v)[:14] # 20210316065455
+							v_d = re.sub(r'^.*?(\d{8,}).*$',r'\1',v)[:14] # 20210316065455
 							if FromMetadata.VERBOSE: print(f'    {v} -> {v_d}')
 							try: 
 								v_ = parse(v_d)
@@ -81,37 +81,22 @@ for example, for saved attachments from e-mail.
 				except KeyError:
 					return {}
 		#
-		def extract_office_metadata(doc_path): # .docx, .xlsx, .pptx
-			if doc_path.endswith('.docx'):
-				doc = Document(doc_path)
-				core_props = doc.core_properties
-			elif doc_path.endswith('.xlsx'):
-				wb = load_workbook(doc_path)
-				core_props = wb.properties
-			elif doc_path.endswith('.pptx'):
-				pres = Presentation(doc_path)
-				core_props = pres.core_properties
-			else:
-				return {}
-			#
-			metadata = { # timezone.utc +00, eq. created: 2021-04-07 06:21:00+00:00 modified: 2023-10-03 05:14:00+00:00
-				'created': getattr(core_props, 'created', None),
-				'modified': getattr(core_props, 'modified', None),
-			} 
-			for k,v in metadata.items():
-				if k in ('created', 'modified'):
-				# m.in. In .xlsx and .pptx you can find dates without tzinfo, but they actually mean UTC +00
-					if isinstance(v, datetime) and v.tzinfo is None: # or? v.tzinfo.utcoffset(v) is None:
-						if FromMetadata.VERBOSE: print('    ### missing tzinfo +00 ###')
-						#v.replace(tzinfo=timezone.utc) # probably doesn't work without: import pytz
-						v = f'{v}' + '+00:00' 
-						metadata[k] = v
+		def extract_office_metadata(doc_path): # .docx, .xlsx, .pptx - zip - docProps/core.xml
+			#https://github.com/profHajal/Microsoft-Office-Documents-Metadata-with-Python/
+			#    dc:title, dc:description, dc:creator, cp:lastModifiedBy, dcterms:created, dcterms:modified
+			zipf = ZipFile(self.file_path)
+			doc = parseString(zipf.read('docProps/core.xml'))
+			metadata = {}
+			for tag in ('created','modified'):
+				try:
+					metadata[tag] = doc.getElementsByTagName('dcterms:'+tag)[0].childNodes[0].data
+				except: pass
 			return add_missing_modified(metadata)
 		#
 		def extract_multimedia_metadata(video_path): # and all other
 			parser = createParser(video_path)
 			if not parser:
-				if FromMetadata.VERBOSE: print(f'    Unable to parse video file: "{video_path}"')
+				if FromMetadata.VERBOSE: print(f'    (hachoir:) Unable to parse file: "{video_path}"')
 				return {}
 			with parser:
 				try:
@@ -125,15 +110,15 @@ for example, for saved attachments from e-mail.
 			# Iterate over metadata_ attributes and fetch their values
 			metadata = {} # metadata_ -> dict
 			for item in metadata_:
-				k_ = item.key.lower()
-				for s in ('time', 'date', 'modified', 'created'):
+				k_ = item.key.lower() #$#;print(f'{item.key=}') #$#
+				for s in ('time', 'date', 'modifi', 'create', 'creati'):
 					if s in k_ and item.values:
 						metadata[item.key] = item.values[0].value
 						break # for s in >>>>>>>>>>>>>>>>>
 			#
 			#offs_ = metadata.get('offset_time_original','') # this is missing in Hachoir?; was introduced in Exif v.2.31(2016)
 			#eq. OffsetTimeOriginal: '+02:00' 
-			for (k0, k1) in {'creation_date': 'created', 'date_time_digitized': 'modified'}.items():
+			for (k0, k1) in {'creation_date': 'created', 'date_time_digitized': 'modified', 'last_modification': 'modified'}.items():
 				v_ = metadata.get(k0)
 				if v_:
 					metadata[k1] = v_
@@ -175,7 +160,7 @@ for example, for saved attachments from e-mail.
 		if FromMetadata.VERBOSE:
 			for k,v in self._metadata.items():
 				k_ = k.lower()
-				for s in ('time', 'date', 'modified', 'created'):
+				for s in ('time', 'date', 'modifi', 'create', 'creati'):
 					if s in k_:
 						if k_ in ('modified', 'created'):
 							if isinstance(v, datetime) and (v.year >= 1970): # .astimezone() problem with 1601-01-01 00:00+02:00
@@ -199,70 +184,79 @@ for example, for saved attachments from e-mail.
 def more_tests():
 	"""
 	My test files in development...
-	>>> FromMetadata.VERBOSE = 1; FromMetadata.LIST_ONLY = 0
-	>>> for file_path in ("ab c.pdf", "ab cc.pdf", "ab ccc.pdf", "ab c.docx", "ab c.xlsx", "ab c.pptx", "ab c.jpg", "ab c.exe", "ab cc.exe" ):
-	...   fp = "tmp/"+	file_path
-	...   ''; f'''{fp} ================='''
+	>>> def do(fp):
+	...   print('~'); print(f'''{fp!r} =================''')
 	...   FileDate.SET_SILENT = 1; FileDate(fp).set(created= '2000-01-02 12:00:00', modified= '2021-03-04 14:00:00')
-	...   FileDate.SET_SILENT = 0; f'''{FromMetadata(fp).set_date('cm')}'''
-	''
-	'tmp/ab c.pdf ================='
+	...   FileDate.SET_SILENT = 0; print(f'''{FromMetadata(fp).set_date('cm')}''')
+	...   return
+	>>> FromMetadata.VERBOSE = 1; FromMetadata.LIST_ONLY = 0
+	>>> ############################### (PyPDF2) #########
+	>>> for file_path in ("ab c.pdf", "ab cc.pdf", "ab ccc.pdf"): do("tmp/"+file_path)
+	~
+	'tmp/ab c.pdf' =================
 	    CreationDate: D:20240528193019+00'00'
 	    ModDate: D:20240528193019+00'00'
 	    created: 2024-05-28 19:30:19+00:00 (2024-05-28 21:30:19+02:00, tzinfo: tzutc())
 	    modified: 2024-05-28 19:30:19+00:00 (2024-05-28 21:30:19+02:00, tzinfo: tzutc())
-	"{'created': '2024-05-28 21:30:19', 'modified': '2024-05-28 21:30:19', 'accessed': '...'}"
-	''
-	'tmp/ab cc.pdf ================='
+	{'created': '2024-05-28 21:30:19', 'modified': '2024-05-28 21:30:19', 'accessed': '...'}
+	~
+	'tmp/ab cc.pdf' =================
 	    c --> m
 	    CreationDate: D:20230914214404Z
 	    created: 2023-09-14 21:44:04+00:00 (2023-09-14 23:44:04+02:00, tzinfo: tzutc())
 	    modified: 2023-09-14 21:44:04+00:00 (2023-09-14 23:44:04+02:00, tzinfo: tzutc())
-	"{'created': '2023-09-14 23:44:04', 'modified': '2023-09-14 23:44:04', 'accessed': '...'}"
-	''
-	'tmp/ab ccc.pdf ================='
+	{'created': '2023-09-14 23:44:04', 'modified': '2023-09-14 23:44:04', 'accessed': '...'}
+	~
+	'tmp/ab ccc.pdf' =================
 	    c --> m
 	    CreationDate: D:20210316065455Z00'00'
 	    created: 2021-03-16 06:54:55+00:00 (2021-03-16 07:54:55+01:00, tzinfo: tzutc())
 	    modified: 2021-03-16 06:54:55+00:00 (2021-03-16 07:54:55+01:00, tzinfo: tzutc())
-	"{'created': '2021-03-16 07:54:55', 'modified': '2021-03-16 07:54:55', 'accessed': '...'}"
-	''
-	'tmp/ab c.docx ================='
-	    created: 2021-04-07 06:21:00+00:00 (2021-04-07 08:21:00+02:00, tzinfo: UTC)
-	    modified: 2023-10-03 05:14:00+00:00 (2023-10-03 07:14:00+02:00, tzinfo: UTC)
-	"{'created': '2021-04-07 08:21:00', 'modified': '2023-10-03 07:14:00', 'accessed': '...'}"
-	''
-	'tmp/ab c.xlsx ================='
-	    ### missing tzinfo +00 ###
-	    ### missing tzinfo +00 ###
-	    created: 2009-10-27 10:23:20+00:00 (2009-10-27 11:23:20+01:00)
-	    modified: 2023-02-02 10:00:06+00:00 (2023-02-02 11:00:06+01:00)
-	"{'created': '2009-10-27 11:23:20', 'modified': '2023-02-02 11:00:06', 'accessed': '...'}"
-	''
-	'tmp/ab c.pptx ================='
-	    ### missing tzinfo +00 ###
-	    ### missing tzinfo +00 ###
-	    created: 2013-01-27 09:14:16+00:00 (2013-01-27 10:14:16+01:00)
-	    modified: 2013-01-27 09:15:58+00:00 (2013-01-27 10:15:58+01:00)
-	"{'created': '2013-01-27 10:14:16', 'modified': '2013-01-27 10:15:58', 'accessed': '...'}"
-	''
-	'tmp/ab c.jpg ================='
+	{'created': '2021-03-16 07:54:55', 'modified': '2021-03-16 07:54:55', 'accessed': '...'}
+	>>> ############################### (zipfile, xml.dom.minidom) #########
+	>>> for file_path in ("ab c.docx", "ab c.xlsx", "ab c.pptx"): do("tmp/"+file_path)
+	~
+	'tmp/ab c.docx' =================
+	    created: 2021-04-07T06:21:00Z (2021-04-07 08:21:00+02:00)
+	    modified: 2023-10-03T05:14:00Z (2023-10-03 07:14:00+02:00)
+	{'created': '2021-04-07 08:21:00', 'modified': '2023-10-03 07:14:00', 'accessed': '...'}
+	~
+	'tmp/ab c.xlsx' =================
+	    created: 2009-10-27T10:23:20Z (2009-10-27 11:23:20+01:00)
+	    modified: 2023-02-02T10:00:06Z (2023-02-02 11:00:06+01:00)
+	{'created': '2009-10-27 11:23:20', 'modified': '2023-02-02 11:00:06', 'accessed': '...'}
+	~
+	'tmp/ab c.pptx' =================
+	    created: 2013-01-27T09:14:16Z (2013-01-27 10:14:16+01:00)
+	    modified: 2013-01-27T09:15:58Z (2013-01-27 10:15:58+01:00)
+	{'created': '2013-01-27 10:14:16', 'modified': '2013-01-27 10:15:58', 'accessed': '...'}
+	>>> ############################### (hachoir.parser) #########
+	>>> for file_path in ("ab c.doc", "ab c.jpg", "ab c.exe", "ab cc.exe" ): do("tmp/"+file_path)
+	~
+	'tmp/ab c.doc' =================
+	    creation_date: 2013-12-16 15:31:00
+	    last_modification: 2013-12-18 09:50:00
+	    created: 2013-12-16 15:31:00 (2013-12-16 15:31:00+01:00, tzinfo: None)
+	    modified: 2013-12-18 09:50:00 (2013-12-18 09:50:00+01:00, tzinfo: None)
+	{'created': '2013-12-16 15:31:00', 'modified': '2013-12-18 09:50:00', 'accessed': '...'}
+	~
+	'tmp/ab c.jpg' =================
 	    creation_date: 2024-05-21 13:49:27
 	    date_time_original: 2024-05-21 13:49:27
 	    date_time_digitized: 2024-05-21 13:49:27
 	    created: 2024-05-21 13:49:27 (2024-05-21 13:49:27+02:00, tzinfo: None)
 	    modified: 2024-05-21 13:49:27 (2024-05-21 13:49:27+02:00, tzinfo: None)
-	"{'created': '2024-05-21 13:49:27', 'modified': '2024-05-21 13:49:27', 'accessed': '...'}"
-	''
-	'tmp/ab c.exe ================='
+	{'created': '2024-05-21 13:49:27', 'modified': '2024-05-21 13:49:27', 'accessed': '...'}
+	~
+	'tmp/ab c.exe' =================
 	    c --> m
 	    creation_date: 2017-05-03 08:30:12
 	    created: 2017-05-03 08:30:12 (2017-05-03 08:30:12+02:00, tzinfo: None)
 	    modified: 2017-05-03 08:30:12 (2017-05-03 08:30:12+02:00, tzinfo: None)
-	"{'created': '2017-05-03 08:30:12', 'modified': '2017-05-03 08:30:12', 'accessed': '...'}"
-	''
-	'tmp/ab cc.exe ================='
-	'None'
+	{'created': '2017-05-03 08:30:12', 'modified': '2017-05-03 08:30:12', 'accessed': '...'}
+	~
+	'tmp/ab cc.exe' =================
+	None
 """
 
 
