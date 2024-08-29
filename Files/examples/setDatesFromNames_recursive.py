@@ -14,7 +14,7 @@ if '-0' in sys.argv[1:]:
 # and set their dates based on file name.
 # Accessed date of folder with date in name can be set to the current time (if recursive).
 for file in Path( (sys.argv + ['.'])[1] ).glob(pattern):
-	print(file, '>>>')
+	print(f'''\n>>> {file}''')
 	print(FromFileName(file).set_date('m'))
 
 print('.')

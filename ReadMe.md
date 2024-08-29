@@ -120,6 +120,15 @@ FromFileName("rec_2020-09-11 13.47.05.abc.txt").set_date('cma')
 ```
 see also examples in `_yyyy_()` and `_dd_MM_yyyy_()`
 
+### **Set file dates based on its metadata** 📝
+
+* for [c]reated, [m]odified
+
+```python
+from filedate.utils import FromMetadata
+FromMetadata(file_path).set_date('cm'))  # or 'm'
+```
+
 ### Working examples
 
 * Files\examples\ **setDatesFromNames_recursive.py**  
@@ -129,3 +138,5 @@ see also examples in `_yyyy_()` and `_dd_MM_yyyy_()`
 * **copyAllDatesFromDir_recursive.py**
 * **setDateFromName.py**
 * **copyFileDate.py**
+* **setDateFromMetadata.py** (`pip install PyPDF2 hachoir` required)
+* **setDatesFromMetadata_recursive.py**

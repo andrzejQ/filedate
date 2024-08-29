@@ -5,7 +5,7 @@ import re
 
 from datetime import datetime
 from zipfile import ZipFile
-from xml.dom.minidom import parseString # for .docx, .xlsx, .pptx
+from xml.dom.minidom import parseString # for .docx, .xlsx, .pptx,   .odt, .ods, .odp
 from PyPDF2 import PdfReader
 from hachoir.parser import createParser # pip install PyPDF2 hachoir
 from hachoir.core import config as HachoirConfig
@@ -81,7 +81,7 @@ for example, for saved attachments from e-mail.
 				except KeyError:
 					return {}
 		#
-		def extract_office_metadata(doc_path): # .docx, .xlsx, .pptx - zip - docProps/core.xml
+		def extract_ms_office_metadata(doc_path): # .docx, .xlsx, .pptx - zip - docProps/core.xml
 			#https://github.com/profHajal/Microsoft-Office-Documents-Metadata-with-Python/
 			#    dc:title, dc:description, dc:creator, cp:lastModifiedBy, dcterms:created, dcterms:modified
 			zipf = ZipFile(self.file_path)
@@ -91,6 +91,21 @@ for example, for saved attachments from e-mail.
 				try:
 					metadata[tag] = doc.getElementsByTagName('dcterms:'+tag)[0].childNodes[0].data
 				except: pass
+			return add_missing_modified(metadata)
+		#
+		def extract_oo_office_metadata(doc_path): # .odt, .ods, .odp - zip - meta.xml
+			#    meta:creation-date, dc:date, meta:... :editing-duration, :editing-cycles, :generator, :document-statistic
+			zipf = ZipFile(self.file_path)
+			doc = parseString(zipf.read('meta.xml'))
+			metadata = {}
+			for tag in ('meta:creation-date','dc:date'):
+				try:
+					metadata[tag] = doc.getElementsByTagName(tag)[0].childNodes[0].data
+				except: pass
+			for (k0, k1) in {'meta:creation-date': 'created', 'dc:date': 'modified'}.items():
+				v_ = metadata.get(k0)
+				if v_:
+					metadata[k1] = v_
 			return add_missing_modified(metadata)
 		#
 		def extract_multimedia_metadata(video_path): # and all other
@@ -140,7 +155,9 @@ for example, for saved attachments from e-mail.
 			if path_end.endswith('.pdf'):
 				return extract_pdf_metadata(f_path)
 			elif path_end.endswith(('.docx', '.xlsx', '.pptx')):
-				return extract_office_metadata(f_path)
+				return extract_ms_office_metadata(f_path)
+			elif path_end.endswith(('.odt', '.ods', '.odp')):
+				return extract_oo_office_metadata(f_path)
 			else: # all other: hachoir
 				return extract_multimedia_metadata(f_path)
 		except Exception as error:
@@ -190,7 +207,7 @@ def more_tests():
 	...   FileDate.SET_SILENT = 0; print(f'''{FromMetadata(fp).set_date('cm')}''')
 	...   return
 	>>> FromMetadata.VERBOSE = 1; FromMetadata.LIST_ONLY = 0
-	>>> ############################### (PyPDF2) #########
+	>>> 							######### (PyPDF2) #########
 	>>> for file_path in ("ab c.pdf", "ab cc.pdf", "ab ccc.pdf"): do("tmp/"+file_path)
 	~
 	'tmp/ab c.pdf' =================
@@ -213,7 +230,7 @@ def more_tests():
 	    created: 2021-03-16 06:54:55+00:00 (2021-03-16 07:54:55+01:00, tzinfo: tzutc())
 	    modified: 2021-03-16 06:54:55+00:00 (2021-03-16 07:54:55+01:00, tzinfo: tzutc())
 	{'created': '2021-03-16 07:54:55', 'modified': '2021-03-16 07:54:55', 'accessed': '...'}
-	>>> ############################### (zipfile, xml.dom.minidom) #########
+	>>> 							######### (zipfile, xml.dom.minidom) #########
 	>>> for file_path in ("ab c.docx", "ab c.xlsx", "ab c.pptx"): do("tmp/"+file_path)
 	~
 	'tmp/ab c.docx' =================
@@ -230,7 +247,30 @@ def more_tests():
 	    created: 2013-01-27T09:14:16Z (2013-01-27 10:14:16+01:00)
 	    modified: 2013-01-27T09:15:58Z (2013-01-27 10:15:58+01:00)
 	{'created': '2013-01-27 10:14:16', 'modified': '2013-01-27 10:15:58', 'accessed': '...'}
-	>>> ############################### (hachoir.parser) #########
+	>>> #
+	>>> for file_path in ("ab c.odt", "ab c.ods", "ab c.odp"): do("tmp/"+file_path)
+	~
+	'tmp/ab c.odt' =================
+	    meta:creation-date: 2024-08-29T08:59:12.527000000
+	    dc:date: 2024-08-29T09:09:33.534000000
+	    created: 2024-08-29T08:59:12.527000000 (2024-08-29 08:59:12.527000+02:00)
+	    modified: 2024-08-29T09:09:33.534000000 (2024-08-29 09:09:33.534000+02:00)
+	{'created': '2024-08-29 08:59:12', 'modified': '2024-08-29 09:09:33', 'accessed': '...'}
+	~
+	'tmp/ab c.ods' =================
+	    meta:creation-date: 2024-08-29T09:03:44.592000000
+	    dc:date: 2024-08-29T09:10:05.701000000
+	    created: 2024-08-29T09:03:44.592000000 (2024-08-29 09:03:44.592000+02:00)
+	    modified: 2024-08-29T09:10:05.701000000 (2024-08-29 09:10:05.701000+02:00)
+	{'created': '2024-08-29 09:03:44', 'modified': '2024-08-29 09:10:05', 'accessed': '...'}
+	~
+	'tmp/ab c.odp' =================
+	    meta:creation-date: 2024-08-29T09:04:17.977000000
+	    dc:date: 2024-08-29T09:09:51.367000000
+	    created: 2024-08-29T09:04:17.977000000 (2024-08-29 09:04:17.977000+02:00)
+	    modified: 2024-08-29T09:09:51.367000000 (2024-08-29 09:09:51.367000+02:00)
+	{'created': '2024-08-29 09:04:17', 'modified': '2024-08-29 09:09:51', 'accessed': '...'}
+	>>> 							######### (hachoir.parser) #########
 	>>> for file_path in ("ab c.doc", "ab c.jpg", "ab c.exe", "ab cc.exe" ): do("tmp/"+file_path)
 	~
 	'tmp/ab c.doc' =================
