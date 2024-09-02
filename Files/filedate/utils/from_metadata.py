@@ -1,11 +1,9 @@
 #!/usr/bin/env python
 
 import re
-#from pathlib import Path
-
 from datetime import datetime
 from zipfile import ZipFile
-from xml.dom.minidom import parseString # for .docx, .xlsx, .pptx,   .odt, .ods, .odp
+import xml.etree.ElementTree as ET # for .docx, .xlsx, .pptx,   .odt, .ods, .odp
 from PyPDF2 import PdfReader
 from hachoir.parser import createParser # pip install PyPDF2 hachoir
 from hachoir.core import config as HachoirConfig
@@ -81,28 +79,30 @@ for example, for saved attachments from e-mail.
 				except KeyError:
 					return {}
 		#
-		def extract_ms_office_metadata(doc_path): # .docx, .xlsx, .pptx - zip - docProps/core.xml
-			#https://github.com/profHajal/Microsoft-Office-Documents-Metadata-with-Python/
-			#    dc:title, dc:description, dc:creator, cp:lastModifiedBy, dcterms:created, dcterms:modified
-			zipf = ZipFile(self.file_path)
-			doc = parseString(zipf.read('docProps/core.xml'))
+		def zipxml_to_dict(zip_file_path, inner_xml):
+			"""Get data from zip->'xml' recus. (depth first order) to flat dict. 
+			Keys without prefixes"""
 			metadata = {}
-			for tag in ('created','modified'):
-				try:
-					metadata[tag] = doc.getElementsByTagName('dcterms:'+tag)[0].childNodes[0].data
-				except: pass
-			return add_missing_modified(metadata)
+			try:
+				zipf = ZipFile(zip_file_path)
+				root = ET.fromstring(zipf.read(inner_xml))
+				#$# print(root.find('.//{*}created')) #$# case of a single, specific element
+				for el in root.iter(): #recus., all data
+					metadata[re.sub(r'.*\}','',el.tag)] = el.text #sub(): remove prefix '{...}'
+					#$# print(f'{el.tag=}') #$# eq. el.tag='{http://purl.org/dc/terms/}created'
+				return metadata
+			except Exception as error:
+				print(error)
+				return metadata
+		#
+		def extract_ms_office_metadata(doc_path): # .docx, .xlsx, .pptx - zip - docProps/core.xml
+			#  title, description, creator, lastModifiedBy, created, modified
+			return add_missing_modified(zipxml_to_dict(self.file_path, 'docProps/core.xml'))
 		#
 		def extract_oo_office_metadata(doc_path): # .odt, .ods, .odp - zip - meta.xml
-			#    meta:creation-date, dc:date, meta:... :editing-duration, :editing-cycles, :generator, :document-statistic
-			zipf = ZipFile(self.file_path)
-			doc = parseString(zipf.read('meta.xml'))
-			metadata = {}
-			for tag in ('meta:creation-date','dc:date'):
-				try:
-					metadata[tag] = doc.getElementsByTagName(tag)[0].childNodes[0].data
-				except: pass
-			for (k0, k1) in {'meta:creation-date': 'created', 'dc:date': 'modified'}.items():
+			#  creation-date, date, editing-duration, editing-cycles, generator, document-statistic
+			metadata = zipxml_to_dict(self.file_path, 'meta.xml')
+			for (k0, k1) in {'creation-date': 'created', 'date': 'modified'}.items():
 				v_ = metadata.get(k0)
 				if v_:
 					metadata[k1] = v_
@@ -230,20 +230,23 @@ def more_tests():
 	    created: 2021-03-16 06:54:55+00:00 (2021-03-16 07:54:55+01:00, tzinfo: tzutc())
 	    modified: 2021-03-16 06:54:55+00:00 (2021-03-16 07:54:55+01:00, tzinfo: tzutc())
 	{'created': '2021-03-16 07:54:55', 'modified': '2021-03-16 07:54:55', 'accessed': '...'}
-	>>> 							######### (zipfile, xml.dom.minidom) #########
+	>>> 							######### (zipfile, xml.etree.ElementTree) #########
 	>>> for file_path in ("ab c.docx", "ab c.xlsx", "ab c.pptx"): do("tmp/"+file_path)
 	~
 	'tmp/ab c.docx' =================
+	    lastModifiedBy: ...
 	    created: 2021-04-07T06:21:00Z (2021-04-07 08:21:00+02:00)
 	    modified: 2023-10-03T05:14:00Z (2023-10-03 07:14:00+02:00)
 	{'created': '2021-04-07 08:21:00', 'modified': '2023-10-03 07:14:00', 'accessed': '...'}
 	~
 	'tmp/ab c.xlsx' =================
+	    lastModifiedBy: ...
 	    created: 2009-10-27T10:23:20Z (2009-10-27 11:23:20+01:00)
 	    modified: 2023-02-02T10:00:06Z (2023-02-02 11:00:06+01:00)
 	{'created': '2009-10-27 11:23:20', 'modified': '2023-02-02 11:00:06', 'accessed': '...'}
 	~
 	'tmp/ab c.pptx' =================
+	    lastModifiedBy: ...
 	    created: 2013-01-27T09:14:16Z (2013-01-27 10:14:16+01:00)
 	    modified: 2013-01-27T09:15:58Z (2013-01-27 10:15:58+01:00)
 	{'created': '2013-01-27 10:14:16', 'modified': '2013-01-27 10:15:58', 'accessed': '...'}
@@ -251,22 +254,22 @@ def more_tests():
 	>>> for file_path in ("ab c.odt", "ab c.ods", "ab c.odp"): do("tmp/"+file_path)
 	~
 	'tmp/ab c.odt' =================
-	    meta:creation-date: 2024-08-29T08:59:12.527000000
-	    dc:date: 2024-08-29T09:09:33.534000000
+	    creation-date: 2024-08-29T08:59:12.527000000
+	    date: 2024-08-29T09:09:33.534000000
 	    created: 2024-08-29T08:59:12.527000000 (2024-08-29 08:59:12.527000+02:00)
 	    modified: 2024-08-29T09:09:33.534000000 (2024-08-29 09:09:33.534000+02:00)
 	{'created': '2024-08-29 08:59:12', 'modified': '2024-08-29 09:09:33', 'accessed': '...'}
 	~
 	'tmp/ab c.ods' =================
-	    meta:creation-date: 2024-08-29T09:03:44.592000000
-	    dc:date: 2024-08-29T09:10:05.701000000
+	    creation-date: 2024-08-29T09:03:44.592000000
+	    date: 2024-08-29T09:10:05.701000000
 	    created: 2024-08-29T09:03:44.592000000 (2024-08-29 09:03:44.592000+02:00)
 	    modified: 2024-08-29T09:10:05.701000000 (2024-08-29 09:10:05.701000+02:00)
 	{'created': '2024-08-29 09:03:44', 'modified': '2024-08-29 09:10:05', 'accessed': '...'}
 	~
 	'tmp/ab c.odp' =================
-	    meta:creation-date: 2024-08-29T09:04:17.977000000
-	    dc:date: 2024-08-29T09:09:51.367000000
+	    creation-date: 2024-08-29T09:04:17.977000000
+	    date: 2024-08-29T09:09:51.367000000
 	    created: 2024-08-29T09:04:17.977000000 (2024-08-29 09:04:17.977000+02:00)
 	    modified: 2024-08-29T09:09:51.367000000 (2024-08-29 09:09:51.367000+02:00)
 	{'created': '2024-08-29 09:04:17', 'modified': '2024-08-29 09:09:51', 'accessed': '...'}
